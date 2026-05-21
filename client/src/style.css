@@ -22,6 +22,7 @@
     padding: 0;
     font-family: 'Cairo', sans-serif;
     user-select: none;
+    -webkit-user-drag: none;
 }
 
 body {
@@ -34,9 +35,9 @@ body {
     justify-content: center;
     align-items: center;
     direction: rtl;
+    touch-action: none;
 }
 
-/* الكلاس الحرج لإجبار العناصر على الاختفاء عند تغيير حالات اللعبة */
 .hidden {
     display: none !important;
 }
@@ -44,7 +45,7 @@ body {
 /* ==========================================================================
    1. تنسيق الشاشات الأساسية (الخلفيات الموحدة)
    ========================================================================== */
-.menu-container, .lobby-screen, .role-screen, .meeting-overlay, .game-screen {
+.menu-container, .lobby-screen, .role-screen, .meeting-overlay, .game-screen, .kill-animation-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -96,7 +97,7 @@ body {
     font-weight: 700;
 }
 
-input[type="text"] {
+input[type="text"], .game-select {
     width: 100%;
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -109,10 +110,15 @@ input[type="text"] {
     transition: var(--transition);
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus, .game-select:focus {
     outline: none;
     border-color: var(--neon-blue);
     box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.game-select {
+    direction: ltr;
+    cursor: pointer;
 }
 
 /* نظام الأزرار الموحد */
@@ -203,10 +209,10 @@ input[type="text"]:focus {
 }
 
 /* ==========================================================================
-   3. شاشة الانتظار (Lobby Screen)
+   3. لوحة الإعدادات وشاشة الانتظار (Lobby Screen)
    ========================================================================== */
 .lobby-card {
-    max-width: 500px;
+    max-width: 520px;
 }
 
 .room-code-box {
@@ -218,13 +224,49 @@ input[type="text"]:focus {
     font-weight: 900;
     color: var(--neon-blue);
     letter-spacing: 2px;
-    margin: 15px 0 25px 0;
+    margin: 10px 0 20px 0;
+}
+
+.settings-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.settings-panel h3 {
+    font-size: 1rem;
+    color: var(--neon-orange);
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 5px;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.setting-row label {
+    font-size: 0.85rem;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.setting-row .game-select {
+    width: 140px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
 }
 
 .players-list {
     list-style: none;
     text-align: right;
-    max-height: 200px;
+    max-height: 160px;
     overflow-y: auto;
     margin-bottom: 25px;
     padding-left: 5px;
@@ -333,7 +375,6 @@ input[type="text"]:focus {
     height: 380px;
 }
 
-/* شبكة بطاقات اللاعبين */
 .voting-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -358,7 +399,6 @@ input[type="text"]:focus {
 .vote-card.voted { background: rgba(16, 185, 129, 0.15); border-color: var(--crew-green); }
 .vote-card.dead { filter: opacity(0.4) grayscale(0.8); cursor: not-allowed; }
 
-/* صندوق المحادثة الجانبي */
 .meeting-chat {
     background: #1f2937;
     border-radius: var(--radius-md);
@@ -426,10 +466,73 @@ input[type="text"]:focus {
 
 .btn-skip:hover { background: #6b7280; }
 
-/* الأنيكيشنز */
+/* ==========================================================================
+   7. واجهة أنيميشن لقطة شاشة القتل السينمائية
+   ========================================================================== */
+.kill-animation-overlay {
+    background: #000000;
+    z-index: 200;
+    flex-direction: column;
+}
+
+.kill-anim-box {
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+}
+
+.shh-text {
+    font-size: 5rem;
+    font-weight: 900;
+    color: var(--impostor-red);
+    letter-spacing: 6px;
+    text-shadow: 0 0 30px rgba(255,62,62,0.8);
+    margin-bottom: 40px;
+    animation: stabShake 0.4s ease-in-out;
+}
+
+.anim-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.actor-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    min-width: 120px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.vs-slash {
+    font-size: 2.5rem;
+    animation: pulse 0.5s infinite alternate;
+}
+
+.anim-desc {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+/* الأنميشن الحركية */
 @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.02); }
+}
+
+@keyframes stabShake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-15px) rotate(-3deg); }
+    40% { transform: translateX(15px) rotate(3deg); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+    100% { transform: translateX(0); }
 }
 
 /* شريط التمرير الاحترافي للصناديق */
