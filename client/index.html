@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Among Us 2D Multiplayer</title>
 </head>
 <body>
@@ -41,7 +41,35 @@
             <div class="room-code-box">
                 كود الغرفة: <span id="displayRoomCode">----</span>
             </div>
-            <h3>اللاعبين المتصلين:</h3>
+
+            <div id="hostSettingsPanel" class="settings-panel">
+                <h3>⚙️ إعدادات المباراة</h3>
+                <div class="setting-row">
+                    <label>عدد الخونة (Impostors):</label>
+                    <select id="settingImpostors" class="game-select">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>سرعة الحركة:</label>
+                    <select id="settingSpeed" class="game-select">
+                        <option value="4">عادية (1x)</option>
+                        <option value="6" selected>سريعة (1.5x)</option>
+                        <option value="8">قصوى (2x)</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>شحن زر القتل (CD):</label>
+                    <select id="settingKillCd" class="game-select">
+                        <option value="15">15 ثانية</option>
+                        <option value="25" selected>25 ثانية</option>
+                        <option value="35">35 ثانية</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>اللاعبين المتصلين (<span id="playerCountLabel">0</span>):</h3>
             <ul id="playersList" class="players-list">
                 </ul>
             <button id="btnStartGame" class="btn btn-create hidden">🚀 ابدأ المباراة الآن</button>
@@ -89,7 +117,19 @@
             <button id="btnSkipVote" class="btn-skip">تخطي التصويت (Skip)</button>
         </div>
     </div>
-        <script type="module" src="./src/index.ts"></script>
 
+    <div id="killAnimationOverlay" class="kill-animation-overlay hidden">
+        <div class="kill-anim-box">
+            <h1 class="shh-text">SHHH!</h1>
+            <div class="anim-visual">
+                <div id="animKillerCard" class="actor-card"></div>
+                <div class="vs-slash">⚔️</div>
+                <div id="animVictimCard" class="actor-card"></div>
+            </div>
+            <p id="killAnimDescription" class="anim-desc">تمت تصفيتك بواسطة الخائن!</p>
+        </div>
+    </div>
+
+    <script type="module" src="./src/index.ts"></script>
 </body>
 </html>
