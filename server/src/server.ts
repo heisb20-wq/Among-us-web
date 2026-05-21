@@ -5,7 +5,7 @@ import cors from 'cors';
 import { RoomManager } from './managers/RoomManager';
 import { GameEngine } from './engine/GameEngine';
 import { SocketEvents, GameState, PlayerRole } from '../../shared/types';
-import { GAME_CONSTANTS } from '../../shared/constants';
+import { GAME_CONSTANTS, MAP_OBSTACLES } from '../../shared/constants';
 
 const app = express();
 app.use(cors());
@@ -18,6 +18,23 @@ const gameEngine = new GameEngine(io, roomManager);
 gameEngine.start();
 
 const meetingIntervals = new Map<string, NodeJS.Timeout>();
+
+// دالة فحص التصادم الرياضية الصارمة على الجانب الخلفي من السيرفر
+function checkCollision(x: number, y: number, radius: number): boolean {
+    for (const obs of MAP_OBSTACLES) {
+        const closestX = Math.max(obs.x, Math.min(x, obs.x + obs.width));
+        const closestY = Math.max(obs.y, Math.min(y, obs.y + obs.height));
+        
+        const distanceX = x - closestX;
+        const distanceY = y - closestY;
+        const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+        
+        if (distanceSquared < (radius * radius)) {
+            return true; // حدث اصطدام حقيقي، يتم الحظر
+        }
+    }
+    return false;
+}
 
 function resolveVotes(roomCode: string) {
     const room = roomManager.getRoom(roomCode);
@@ -72,7 +89,8 @@ function resolveVotes(roomCode: string) {
 
     room.gameState = GameState.PLAYING;
     room.players.forEach(p => {
-        p.position = { x: 1000, y: 1000 };
+        // نقطة رسبنة آمنة (1000, 700) داخل الكافتيريا وبعيدة تماماً عن الطاولة لئلا يعلق اللاعبون
+        p.position = { x: 1000, y: 700 };
         p.hasVoted = false;
         p.votedFor = null;
         if (p.role === PlayerRole.IMPOSTOR) p.lastKillTime = Date.now();
@@ -106,7 +124,13 @@ io.on('connection', (socket) => {
     if(room && room.hostId === socket.id && room.gameState === GameState.LOBBY) {
         room.gameState = GameState.STARTING;
         roomManager.assignRolesAndPositions(room.roomCode);
-        room.players.forEach(p => { if(p.role === PlayerRole.IMPOSTOR) p.lastKillTime = Date.now(); });
+        
+        // إجبار نقطة رسبنة آمنة للجميع عند أول رسبنة في المباراة لمنع التعليق
+        room.players.forEach(p => { 
+            p.position = { x: 1000, y: 700 };
+            if(p.role === PlayerRole.IMPOSTOR) p.lastKillTime = Date.now(); 
+        });
+        
         gameEngine.broadcastRoomUpdate(room.roomCode);
 
         setTimeout(() => {
@@ -206,14 +230,24 @@ io.on('connection', (socket) => {
     const room = roomManager.getRoom(payload.roomCode);
     if (room && room.gameState === GameState.PLAYING) {
         const player = room.players.find(p => p.socketId === socket.id);
-        if (player) {
+        if (player && player.isAlive) {
             const speed = GAME_CONSTANTS.BASE_SPEED * room.settings.playerSpeedMultiplier;
-            player.position.x += payload.vec.x * speed;
-            player.position.y += payload.vec.y * speed;
+            
+            const nextX = player.position.x + payload.vec.x * speed;
+            const nextY = player.position.y + payload.vec.y * speed;
+
+            // تطبيق منطق تفكيك محاور الحركة (الانزلاق الاحترافي) عند الاصطدام بالعوائق
+            if (!checkCollision(nextX, player.position.y, GAME_CONSTANTS.PLAYER_RADIUS)) {
+                player.position.x = nextX;
+            }
+            if (!checkCollision(player.position.x, nextY, GAME_CONSTANTS.PLAYER_RADIUS)) {
+                player.position.y = nextY;
+            }
 
             if (payload.vec.x > 0) player.direction = 'right';
             if (payload.vec.x < 0) player.direction = 'left';
 
+            // الحفاظ على حدود الخريطة الكبرى الإجمالية
             if (player.position.x < 0) player.position.x = 0;
             if (player.position.x > GAME_CONSTANTS.MAP_WIDTH) player.position.x = GAME_CONSTANTS.MAP_WIDTH;
             if (player.position.y < 0) player.position.y = 0;
