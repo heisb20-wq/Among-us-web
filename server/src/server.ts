@@ -4,7 +4,8 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { RoomManager } from './managers/RoomManager';
 import { GameEngine } from './engine/GameEngine';
-import { SocketEvents, ClientJoinCodePayload, ClientUpdateSettingsPayload } from '../../shared/types';
+import { SocketEvents, GameState } from '../../shared/types';
+import { GAME_CONSTANTS } from '../../shared/constants';
 
 const app = express();
 app.use(cors());
@@ -29,7 +30,7 @@ io.on('connection', (socket) => {
     } catch (e: any) { socket.emit(SocketEvents.SERVER_ERROR, e.message); }
   });
 
-  socket.on(SocketEvents.CLIENT_JOIN_CODE, (payload: ClientJoinCodePayload) => {
+  socket.on(SocketEvents.CLIENT_JOIN_CODE, (payload: { playerName: string, roomCode: string }) => {
     try {
       const room = roomManager.joinRoomByCode(socket.id, payload.playerName, payload.roomCode);
       socket.join(room.roomCode);
@@ -38,23 +39,38 @@ io.on('connection', (socket) => {
     } catch (e: any) { socket.emit(SocketEvents.SERVER_ERROR, e.message); }
   });
 
-  socket.on(SocketEvents.CLIENT_JOIN_RANDOM, (payload: { playerName: string }) => {
-    try {
-      let room = roomManager.findRandomAvailableRoom() || roomManager.createRoom(socket.id, payload.playerName);
-      if (room.players.findIndex(p => p.socketId === socket.id) === -1) {
-        room = roomManager.joinRoomByCode(socket.id, payload.playerName, room.roomCode);
-      }
-      socket.join(room.roomCode);
-      socket.emit(SocketEvents.SERVER_JOIN_SUCCESS, { roomCode: room.roomCode, playerId: socket.id });
-      gameEngine.broadcastRoomUpdate(room.roomCode);
-    } catch (e: any) { socket.emit(SocketEvents.SERVER_ERROR, e.message); }
+  socket.on(SocketEvents.CLIENT_START_GAME, (payload: { roomCode: string }) => {
+    const room = roomManager.getRoom(payload.roomCode);
+    if(room && room.hostId === socket.id) {
+        room.gameState = GameState.PLAYING;
+        gameEngine.broadcastRoomUpdate(room.roomCode);
+    }
   });
 
-  socket.on(SocketEvents.CLIENT_UPDATE_SETTINGS, (payload: ClientUpdateSettingsPayload & { roomCode: string }) => {
-    try {
-      const room = roomManager.updateRoomSettings(payload.roomCode, socket.id, payload.settings);
-      gameEngine.broadcastRoomUpdate(room.roomCode);
-    } catch (e: any) { socket.emit(SocketEvents.SERVER_ERROR, e.message); }
+  // استقبال ومعالجة إحداثيات الحركة السريعة لكل لاعب وبثها فوراً (Tick Engine)
+  socket.on(SocketEvents.CLIENT_MOVE, (payload: { roomCode: string, vec: { x: number, y: number } }) => {
+    const room = roomManager.getRoom(payload.roomCode);
+    if (room && room.gameState === GameState.PLAYING) {
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (player && player.isAlive) {
+            // حساب السرعة والاتجاه ومراعاة حدود حجم الخريطة (Boundaries)
+            const speed = GAME_CONSTANTS.BASE_SPEED * room.settings.playerSpeedMultiplier;
+            player.position.x += payload.vec.x * speed;
+            player.position.y += payload.vec.y * speed;
+
+            if (payload.vec.x > 0) player.direction = 'right';
+            if (payload.vec.x < 0) player.direction = 'left';
+
+            // الحفاظ على اللاعب داخل حدود الخريطة الـ 2000 بكسل
+            if (player.position.x < 0) player.position.x = 0;
+            if (player.position.x > GAME_CONSTANTS.MAP_WIDTH) player.position.x = GAME_CONSTANTS.MAP_WIDTH;
+            if (player.position.y < 0) player.position.y = 0;
+            if (player.position.y > GAME_CONSTANTS.MAP_HEIGHT) player.position.y = GAME_CONSTANTS.MAP_HEIGHT;
+
+            // بث إحداثيات الحركة لجميع من في الغرفة فقط بكفاءة عالية
+            io.to(room.roomCode).emit(SocketEvents.SERVER_TICK_UPDATE, { players: room.players });
+        }
+    }
   });
 
   socket.on('disconnect', () => {
