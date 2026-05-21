@@ -81,6 +81,9 @@ const btnReport = document.getElementById('btnReport') as HTMLButtonElement;
 const btnSkipVote = document.getElementById('btnSkipVote')!;
 const btnSendChat = document.getElementById('btnSendChat')!;
 
+// عنصر مؤقت إعادة شحن القتل للخائن (تم تعريفه وإصلاحه ليتوافق مع أسطر العد التنازلي)
+const killCooldownTimerDiv = document.getElementById('killCooldownTimer') as HTMLSpanElement;
+
 // عناصر لوحة التحكم الخاصة بالـ Host
 const hostSettingsPanel = document.getElementById('hostSettingsPanel')!;
 const settingImpostors = document.getElementById('settingImpostors') as HTMLSelectElement;
