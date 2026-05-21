@@ -2,84 +2,94 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Among Us Web</title>
-    <link rel="stylesheet" href="./src/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Among Us 2D Multiplayer</title>
 </head>
 <body>
-    <div id="app">
-        <div id="menuContainer" class="menu-container">
+
+    <div id="menuContainer" class="menu-container">
+        <div class="game-card">
             <h1 class="game-title">AMONG US</h1>
-            <div class="input-group">
-                <label for="playerName" class="label-title">اسم اللاعب:</label>
-                <input type="text" id="playerName" placeholder="أدخل اسمك هنا..." maxlength="14">
-            </div>
-            <div class="actions-group">
-                <button id="btnCreate" class="btn btn-host">إنشاء غرفة (Host)</button>
-                <div class="join-box">
-                    <input type="text" id="roomCode" placeholder="كود" maxlength="6">
-                    <button id="btnJoinCode" class="btn btn-join">انضمام</button>
-                </div>
-                <button id="btnJoinRandom" class="btn btn-public">غرفة عشوائية</button>
-            </div>
-            <div id="errorMessage" class="error-msg hidden"></div>
-        </div>
-
-        <div id="lobbyScreen" class="lobby-screen menu-container hidden">
-            <h2>غرفة: <span id="displayRoomCode" style="color: #00ffff;">------</span></h2>
-            <div class="status-indicator">بانتظار المضيف لبدء المباراة...</div>
-            <h3>اللاعبون المتصلون:</h3>
-            <ul id="playersList"></ul>
-            <button id="btnStartGame" class="btn btn-host hidden" style="margin-top: 20px;">بدء المباراة 🚀</button>
-        </div>
-
-        <div id="roleScreen" class="role-screen hidden">
-            <div class="role-content">
-                <h1 id="roleTitle" class="role-title">SHHH!</h1>
-                <p id="roleSubtitle" class="role-subtitle">تم تحديد دورك السرّي</p>
-            </div>
-        </div>
-
-        <div id="meetingOverlay" class="meeting-overlay hidden">
-            <div class="meeting-box">
-                <h2 class="meeting-title">🚨 اجتماع طوارئ / بلاغ جثة 🚨</h2>
-                <div id="meetingTimer" class="meeting-timer">الوقت المتبقي للتصويت: -- ثانية</div>
-                
-                <div class="meeting-layout">
-                    <div class="players-voting-grid" id="playersVotingGrid"></div>
-                    
-                    <div class="meeting-chat-box">
-                        <div class="chat-logs" id="chatLogs"></div>
-                        <div class="chat-input-area">
-                            <input type="text" id="chatInput" placeholder="اكتب تظلمك أو اتهامك هنا..." maxlength="60">
-                            <button id="btnSendChat" class="btn-send">إرسال</button>
-                        </div>
-                    </div>
-                </div>
-                <button id="btnSkipVote" class="btn-skip">تخطي التصويت (Skip Vote)</button>
-            </div>
-        </div>
-
-        <div id="gameScreen" class="game-screen hidden">
-            <canvas id="gameCanvas"></canvas>
             
-            <div id="joystickZone" class="joystick-zone">
-                <div class="joystick-base">
-                    <div id="joystickKnob" class="joystick-knob"></div>
-                </div>
+            <div class="input-group">
+                <label for="playerName">اسم اللاعب</label>
+                <input type="text" id="playerName" placeholder="أدخل اسمك هنا..." autocomplete="off">
             </div>
 
-            <div id="actionZone" class="action-zone">
-                <button id="btnKill" class="btn-action btn-kill hidden" disabled>
-                    <span class="action-text">KILL</span>
-                    <span id="killCooldownTimer" class="cooldown-overlay"></span>
-                </button>
-                <button id="btnReport" class="btn-action btn-report hidden" disabled>
-                    <span class="action-text">REPORT</span>
-                </button>
+            <button id="btnCreate" class="btn btn-create">
+                <span class="icon">👑</span> إنشاء غرفة (Host)
+            </button>
+
+            <div class="join-grid">
+                <input type="text" id="roomCode" placeholder="كود الغرفة" maxlength="4">
+                <button id="btnJoinCode" class="btn btn-join">انضمام</button>
             </div>
+
+            <div class="divider"><span>أو</span></div>
+
+            <button id="btnJoinRandom" class="btn btn-random">
+                <span class="icon">🚀</span> دخول سريع لغرفة عشوائية
+            </button>
+            
+            <div id="errorMessage" class="error-message hidden"></div>
         </div>
     </div>
-    <script type="module" src="./src/index.ts"></script>
+
+    <div id="lobbyScreen" class="lobby-screen hidden">
+        <div class="game-card lobby-card">
+            <h2>غرفة الانتظار</h2>
+            <div class="room-code-box">
+                كود الغرفة: <span id="displayRoomCode">----</span>
+            </div>
+            <h3>اللاعبين المتصلين:</h3>
+            <ul id="playersList" class="players-list">
+                </ul>
+            <button id="btnStartGame" class="btn btn-create hidden">🚀 ابدأ المباراة الآن</button>
+        </div>
+    </div>
+
+    <div id="roleScreen" class="role-screen hidden">
+        <div class="role-content">
+            <h1 id="roleTitle" class="role-title">CREWMATE</h1>
+            <p id="roleSubtitle" class="role-subtitle">تحميل تفاصيل المهمة...</p>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="game-screen hidden">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="game-controls">
+            <button id="btnKill" class="btn-game btn-kill hidden">
+                ☠️ KILL <span id="killCooldownTimer"></span>
+            </button>
+            <button id="btnReport" class="btn-game btn-report hidden">
+                📢 REPORT
+            </button>
+        </div>
+    </div>
+
+    <div id="meetingOverlay" class="meeting-overlay hidden">
+        <div class="meeting-box">
+            <h2 class="meeting-title">🚨 اجتماع طارئ! 🚨</h2>
+            <div id="meetingTimer" class="meeting-timer">الوقت المتبقي للتصويت: -- ثانية</div>
+            
+            <div class="meeting-layout">
+                <div id="playersVotingGrid" class="voting-grid">
+                    </div>
+                
+                <div class="meeting-chat">
+                    <div id="chatLogs" class="chat-logs"></div>
+                    <div class="chat-input-group">
+                        <input type="text" id="chatInput" placeholder="اكتب رسالتك هنا..." autocomplete="off">
+                        <button id="btnSendChat">إرسال</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="btnSkipVote" class="btn-skip">تخطي التصويت (Skip)</button>
+        </div>
+    </div>
+
+    <script type="module" src="./index.ts"></script>
 </body>
 </html>
