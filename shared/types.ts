@@ -33,6 +33,7 @@ export interface Player {
   direction: 'left' | 'right';
   canVote: boolean;
   tasksProgress: number;
+  lastKillTime?: number; // تتبع وقت آخر عملية قتل لحساب الـ Cooldown
 }
 
 export interface RoomSettings {
@@ -67,6 +68,7 @@ export const SocketEvents = {
   CLIENT_UPDATE_SETTINGS: 'c_update_settings',
   CLIENT_START_GAME: 'c_start_game',
   CLIENT_MOVE: 'c_move',
+  CLIENT_KILL: 'c_kill', // حدث طلب القتل
   CLIENT_LEAVE: 'c_leave',
   SERVER_ROOM_UPDATED: 's_room_updated',
   SERVER_ERROR: 's_error',
