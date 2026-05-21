@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Among Us Web - Lobby</title>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="menu-container">
+            <h1 class="game-title">AMONG US</h1>
+            
+            <div class="input-group">
+                <label for="playerName" class="label-title">اسم اللاعب:</label>
+                <input type="text" id="playerName" placeholder="أدخل اسمك هنا..." maxlength="14">
+            </div>
+
+            <div class="actions-group">
+                <button id="btnCreate" class="btn btn-host">إنشاء غرفة (Host)</button>
+                
+                <div class="join-box">
+                    <input type="text" id="roomCode" placeholder="كود الغرفة" maxlength="6">
+                    <button id="btnJoinCode" class="btn btn-join">انضمام</button>
+                </div>
+
+                <button id="btnJoinRandom" class="btn btn-public">غرفة عشوائية</button>
+            </div>
+
+            <div id="errorMessage" class="error-msg hidden"></div>
+
+            <div id="lobbyScreen" class="lobby-screen hidden">
+                <h2>كود الغرفة: <span id="displayRoomCode">------</span></h2>
+                <div class="status-indicator">بانتظار اكتمال اللاعبين...</div>
+                <h3>اللاعبون المتواجدون:</h3>
+                <ul id="playersList"></ul>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./src/index.ts"></script>
+</body>
+</html>
