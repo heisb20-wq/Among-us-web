@@ -65,6 +65,8 @@ export const SocketEvents = {
   CLIENT_JOIN_CODE: 'c_join_code',
   CLIENT_JOIN_RANDOM: 'c_join_random',
   CLIENT_UPDATE_SETTINGS: 'c_update_settings',
+  CLIENT_START_GAME: 'c_start_game',
+  CLIENT_MOVE: 'c_move',
   CLIENT_LEAVE: 'c_leave',
   SERVER_ROOM_UPDATED: 's_room_updated',
   SERVER_ERROR: 's_error',
