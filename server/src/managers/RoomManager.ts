@@ -1,145 +1,129 @@
-import { Room, Player, GameState, PlayerRole, RoomSettings } from '../../../shared/types';
+import { Room, Player, GameState, PlayerRole } from '../../../shared/types';
 import { GAME_CONSTANTS } from '../../../shared/constants';
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
 
-  public generateRoomCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    do {
-      code = '';
-      for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-    } while (this.rooms.has(code));
-    return code;
-  }
+  // مصفوفة الألوان الرسمية للعبة أمونج آس لمنحها للاعبين بالترتيب
+  private availableColors: string[] = [
+    '#c51111', '#132ed1', '#117f2d', '#ed54ba', '#ff7d00',
+    '#f6f657', '#3f474e', '#d6e0f0', '#6b2fbb', '#71491e'
+  ];
 
-  public createRoom(hostSocketId: string, playerName: string): Room {
+  public createRoom(socketId: string, playerName: string): Room {
     const roomCode = this.generateRoomCode();
-    const cleanName = this.validateAndCleanName(playerName);
-    
-    const hostPlayer: Player = this.createNewPlayer(hostSocketId, hostSocketId, cleanName, roomCode, GAME_CONSTANTS.AVAILABLE_COLORS[0]);
-    
-    const defaultSettings: RoomSettings = {
-      playerSpeedMultiplier: 1.0,
-      killCooldownSeconds: 15,
-      impostorCount: 1,
-      votingTimeSeconds: 45
-    };
+    const newPlayer: Player = this.createNewPlayer(socketId, playerName, roomCode, this.availableColors[0]);
 
-    const newRoom: Room = {
+    const room: Room = {
       roomCode,
-      hostId: hostPlayer.id,
-      players: [hostPlayer],
-      settings: defaultSettings,
+      hostId: socketId,
+      players: [newPlayer],
+      settings: {
+        playerSpeedMultiplier: 1.0,
+        killCooldownSeconds: 30,
+        impostorCount: 1, // افتراضي قاتل واحد
+        votingTimeSeconds: 60
+      },
       gameState: GameState.LOBBY,
       createdAt: Date.now()
     };
 
-    this.rooms.set(roomCode, newRoom);
-    return newRoom;
-  }
-
-  public joinRoomByCode(socketId: string, playerName: string, roomCode: string): Room {
-    const code = roomCode.trim().toUpperCase();
-    const room = this.rooms.get(code);
-
-    if (!room) throw new Error('الغرفة غير موجودة، تحقق من الكود المكتوب.');
-    if (room.gameState !== GameState.LOBBY) throw new Error('لا يمكن الانضمام، المباراة بدأت بالفعل.');
-    if (room.players.length >= GAME_CONSTANTS.MAX_PLAYERS_PER_ROOM) throw new Error('الغرفة ممتلئة بالكامل.');
-
-    const cleanName = this.validateAndCleanName(playerName);
-    const usedColors = room.players.map(p => p.color);
-    const availableColor = GAME_CONSTANTS.AVAILABLE_COLORS.find(c => !usedColors.includes(c)) || GAME_CONSTANTS.AVAILABLE_COLORS[0];
-
-    const newPlayer = this.createNewPlayer(socketId, socketId, cleanName, code, availableColor);
-    room.players.push(newPlayer);
-    
-    this.autoAdjustImpostorCount(room);
+    this.rooms.set(roomCode, room);
     return room;
   }
 
-  public findRandomAvailableRoom(): Room | null {
-    for (const room of this.rooms.values()) {
-      if (room.gameState === GameState.LOBBY && room.players.length < GAME_CONSTANTS.MAX_PLAYERS_PER_ROOM) {
-        return room;
-      }
-    }
-    return null;
+  public joinRoomByCode(socketId: string, playerName: string, roomCode: string): Room {
+    const room = this.rooms.get(roomCode);
+    if (!room) throw new Error('لم يتم العثور على الغرفة، تحقق من الكود!');
+    if (room.gameState !== GameState.LOBBY) throw new Error('المباراة بدأت بالفعل في هذه الغرفة!');
+    if (room.players.length >= 10) throw new Error('الغرفة ممتلئة بالكامل! (الحد الأقصى 10)');
+
+    const colorUsed = room.players.map(p => p.color);
+    const freeColor = this.availableColors.find(c => !colorUsed.includes(c)) || '#ffffff';
+
+    const newPlayer = this.createNewPlayer(socketId, playerName, roomCode, freeColor);
+    room.players.push(newPlayer);
+    return room;
   }
 
-  public handleDisconnect(socketId: string): { room: Room | null; destroyRoom: boolean } {
-    for (const room of this.rooms.values()) {
-      const playerIndex = room.players.findIndex(p => p.socketId === socketId);
-      if (playerIndex !== -1) {
-        const player = room.players[playerIndex];
-        if (room.gameState === GameState.LOBBY) {
-          room.players.splice(playerIndex, 1);
-          if (room.players.length === 0) {
-            this.rooms.delete(room.roomCode);
-            return { room: null, destroyRoom: true };
-          }
-          if (room.hostId === player.id) {
-            room.hostId = room.players[0].id;
-          }
-          this.autoAdjustImpostorCount(room);
-          return { room, destroyRoom: false };
-        } else {
-          player.isConnected = false;
-          return { room, destroyRoom: false };
-        }
+  public joinRandom(socketId: string, playerName: string): Room {
+    for (const [_, room] of this.rooms) {
+      if (room.gameState === GameState.LOBBY && room.players.length < 10) {
+        return this.joinRoomByCode(socketId, playerName, room.roomCode);
       }
     }
-    return { room: null, destroyRoom: false };
+    return this.createRoom(socketId, playerName);
+  }
+
+  // خوارزمية توزيع الأدوار السرية وإعادة ضبط الكاميرات والمواقع للجميع
+  public assignRolesAndPositions(roomCode: string) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    const totalPlayers = room.players.length;
+    // التأكد من عدم زيادة عدد القتلة عن عدد اللاعبين الفعليين
+    let impostorsNeeded = room.settings.impostorCount;
+    if (totalPlayers <= 2) impostorsNeeded = 1; 
+
+    // إعادة تصفير كافة الأدوار والمواقع إلى مركز الخريطة 1000، 1000
+    room.players.forEach(p => {
+      p.role = PlayerRole.CREWMATE;
+      p.isAlive = true;
+      p.position = { x: 1000, y: 1000 }; 
+    });
+
+    // خلط ترتيب اللاعبين عشوائياً بسحب الخوارزميات الرياضية
+    const shuffledPlayers = [...room.players].sort(() => Math.random() - 0.5);
+    
+    // سحب اللاعبين الأوائل وتعيينهم كـ Impostors
+    for (let i = 0; i < impostorsNeeded; i++) {
+      const targetPlayer = room.players.find(p => p.id === shuffledPlayers[i].id);
+      if (targetPlayer) {
+        targetPlayer.role = PlayerRole.IMPOSTOR;
+      }
+    }
+  }
+
+  public handleDisconnect(socketId: string): { roomCode?: string; room?: Room } {
+    for (const [roomCode, room] of this.rooms) {
+      const index = room.players.findIndex(p => p.socketId === socketId);
+      if (index !== -1) {
+        room.players.splice(index, 1);
+        if (room.players.length === 0) {
+          this.rooms.delete(roomCode);
+          return {};
+        }
+        if (room.hostId === socketId && room.players.length > 0) {
+          room.hostId = room.players[0].socketId;
+        }
+        return { roomCode, room };
+      }
+    }
+    return {};
   }
 
   public getRoom(roomCode: string): Room | undefined {
     return this.rooms.get(roomCode);
   }
 
-  public updateRoomSettings(roomCode: string, hostSocketId: string, newSettings: Partial<RoomSettings>): Room {
-    const room = this.rooms.get(roomCode);
-    if (!room) throw new Error('الغرفة غير موجودة.');
-    
-    const hostPlayer = room.players.find(p => p.socketId === hostSocketId);
-    if (!hostPlayer || room.hostId !== hostPlayer.id) throw new Error('صلاحية التعديل للمضيف فقط.');
-
-    if (newSettings.playerSpeedMultiplier !== undefined) room.settings.playerSpeedMultiplier = newSettings.playerSpeedMultiplier;
-    if (newSettings.killCooldownSeconds !== undefined) room.settings.killCooldownSeconds = newSettings.killCooldownSeconds;
-    if (newSettings.votingTimeSeconds !== undefined) room.settings.votingTimeSeconds = newSettings.votingTimeSeconds;
-    if (newSettings.impostorCount !== undefined) {
-      room.settings.impostorCount = newSettings.impostorCount;
-      this.autoAdjustImpostorCount(room);
-    }
-    return room;
+  private generateRoomCode(): string {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
-  private validateAndCleanName(name: string): string {
-    if (!name) throw new Error('الاسم لا يمكن أن يكون فارغاً.');
-    let clean = name.trim().replace(/\s+/g, ' ');
-    if (clean.length < GAME_CONSTANTS.MIN_NAME_LENGTH || clean.length > GAME_CONSTANTS.MAX_NAME_LENGTH) {
-      throw new Error('طول الاسم غير مسموح به.');
-    }
-    return clean.replace(/[<>:"'/\\|?*]/g, '');
-  }
-
-  private createNewPlayer(id: string, socketId: string, name: string, roomId: string, color: string): Player {
+  private createNewPlayer(socketId: string, name: string, roomId: string, color: string): Player {
     return {
-      id, socketId, name, color, roomId,
-      role: PlayerRole.NONE, isAlive: true, isConnected: true,
-      position: { x: GAME_CONSTANTS.MAP_WIDTH / 2, y: GAME_CONSTANTS.MAP_HEIGHT / 2 },
-      direction: 'right', canVote: true, tasksProgress: 0
+      id: socketId,
+      socketId,
+      name,
+      color,
+      roomId,
+      role: PlayerRole.NONE,
+      isAlive: true,
+      isConnected: true,
+      position: { x: 0, y: 0 },
+      direction: 'right',
+      canVote: true,
+      tasksProgress: 0
     };
-  }
-
-  private autoAdjustImpostorCount(room: Room): void {
-    const count = room.players.length;
-    let max = 1;
-    if (count >= 7 && count <= 10) max = 2;
-    else if (count >= 11 && count <= 13) max = 3;
-    else if (count >= 14 && count <= 16) max = 4;
-    if (room.settings.impostorCount > max) room.settings.impostorCount = max;
   }
 }
