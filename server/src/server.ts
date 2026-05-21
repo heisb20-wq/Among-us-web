@@ -17,6 +17,71 @@ const roomManager = new RoomManager();
 const gameEngine = new GameEngine(io, roomManager);
 gameEngine.start();
 
+const meetingIntervals = new Map<string, NodeJS.Timeout>();
+
+function resolveVotes(roomCode: string) {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    if (meetingIntervals.has(roomCode)) {
+        clearInterval(meetingIntervals.get(roomCode)!);
+        meetingIntervals.delete(roomCode);
+    }
+
+    const voteCounts: Record<string, number> = {};
+    let skipCount = 0;
+
+    room.players.forEach(p => {
+        if (p.hasVoted && p.votedFor) {
+            if (p.votedFor === 'skip') skipCount++;
+            else voteCounts[p.votedFor] = (voteCounts[p.votedFor] || 0) + 1;
+        }
+    });
+
+    let maxVotes = skipCount;
+    let ejectedId = 'skip';
+    let isTie = false;
+
+    for (const [id, count] of Object.entries(voteCounts)) {
+        if (count > maxVotes) { maxVotes = count; ejectedId = id; isTie = false; } 
+        else if (count === maxVotes && maxVotes > 0) { isTie = true; }
+    }
+
+    let reportMsg = "لم يتم طرد أحد بسبب تخطي التصويت أو التعادل!";
+    if (!isTie && ejectedId !== 'skip') {
+        const victim = room.players.find(p => p.id === ejectedId);
+        if (victim) {
+            victim.isAlive = false;
+            victim.role = victim.role === PlayerRole.IMPOSTOR ? PlayerRole.GHOST_IMPOSTOR : PlayerRole.GHOST_CREWMATE;
+            reportMsg = "تم قذف " + victim.name + " في الفضاء الخارجي الحارق!";
+        }
+    }
+
+    const aliveImpostors = room.players.filter(p => p.isAlive && p.role === PlayerRole.IMPOSTOR).length;
+    const aliveCrewmates = room.players.filter(p => p.isAlive && p.role === PlayerRole.CREWMATE).length;
+
+    if (aliveImpostors === 0) {
+        room.gameState = GameState.ENDED;
+        io.to(roomCode).emit(SocketEvents.SERVER_GAME_OVER, { winner: 'CREWMATES', text: reportMsg + " فاز الأبرياء وطاقم السفينة بالكامل! 🎉" });
+        return;
+    } else if (aliveImpostors >= aliveCrewmates) {
+        room.gameState = GameState.ENDED;
+        io.to(roomCode).emit(SocketEvents.SERVER_GAME_OVER, { winner: 'IMPOSTORS', text: reportMsg + " فاز الـ Impostors والمخادعون ونجحت المؤامرة! 😈" });
+        return;
+    }
+
+    room.gameState = GameState.PLAYING;
+    room.players.forEach(p => {
+        p.position = { x: 1000, y: 1000 };
+        p.hasVoted = false;
+        p.votedFor = null;
+        if (p.role === PlayerRole.IMPOSTOR) p.lastKillTime = Date.now();
+    });
+
+    io.to(roomCode).emit(SocketEvents.SERVER_CHAT_RECEIVE, { senderName: 'النظام', senderColor: '#ffaa00', text: reportMsg });
+    gameEngine.broadcastRoomUpdate(roomCode);
+}
+
 io.on('connection', (socket) => {
   socket.on(SocketEvents.CLIENT_CREATE_ROOM, (payload: { playerName: string }) => {
     try {
@@ -41,10 +106,7 @@ io.on('connection', (socket) => {
     if(room && room.hostId === socket.id && room.gameState === GameState.LOBBY) {
         room.gameState = GameState.STARTING;
         roomManager.assignRolesAndPositions(room.roomCode);
-        
-        // إعداد تصفير عداد القتل الأولي عند انطلاق المباراة لكل القتلة
         room.players.forEach(p => { if(p.role === PlayerRole.IMPOSTOR) p.lastKillTime = Date.now(); });
-        
         gameEngine.broadcastRoomUpdate(room.roomCode);
 
         setTimeout(() => {
@@ -57,7 +119,64 @@ io.on('connection', (socket) => {
     }
   });
 
-  // استقبال ومعالجة طلب تصفية لاعب بريء (Kill Client Event)
+  socket.on(SocketEvents.CLIENT_REPORT_BODY, (payload: { roomCode: string }) => {
+    const room = roomManager.getRoom(payload.roomCode);
+    if (room && room.gameState === GameState.PLAYING) {
+        const reporter = room.players.find(p => p.socketId === socket.id);
+        if (reporter && reporter.isAlive) {
+            room.gameState = GameState.MEETING;
+            room.meetingTimer = room.settings.votingTimeSeconds;
+            
+            room.players.forEach(p => { p.hasVoted = false; p.votedFor = null; });
+
+            io.to(room.roomCode).emit(SocketEvents.SERVER_CHAT_RECEIVE, { senderName: '🚨 بلاغ', senderColor: '#ff3333', text: "قام اللاعب [" + reporter.name + "] بالتبليغ عن جثة! ابدأوا التصويت الآن وحللوا الموقف." });
+
+            const timerInterval = setInterval(() => {
+                const r = roomManager.getRoom(payload.roomCode);
+                if (r && r.gameState === GameState.MEETING && r.meetingTimer !== undefined) {
+                    r.meetingTimer--;
+                    if (r.meetingTimer <= 0) {
+                        clearInterval(timerInterval);
+                        resolveVotes(payload.roomCode);
+                    } else {
+                        io.to(r.roomCode).emit(SocketEvents.SERVER_TICK_UPDATE, { players: r.players, gameState: r.gameState, meetingTimer: r.meetingTimer });
+                    }
+                } else { clearInterval(timerInterval); }
+            }, 1000);
+
+            meetingIntervals.set(room.roomCode, timerInterval);
+            gameEngine.broadcastRoomUpdate(room.roomCode);
+        }
+    }
+  });
+
+  socket.on(SocketEvents.CLIENT_SEND_CHAT, (payload: { roomCode: string, text: string }) => {
+    const room = roomManager.getRoom(payload.roomCode);
+    if (room && room.gameState === GameState.MEETING) {
+        const sender = room.players.find(p => p.socketId === socket.id);
+        if (sender) {
+            io.to(room.roomCode).emit(SocketEvents.SERVER_CHAT_RECEIVE, { senderName: sender.name, senderColor: sender.color, text: payload.text });
+        }
+    }
+  });
+
+  socket.on(SocketEvents.CLIENT_CAST_VOTE, (payload: { roomCode: string, targetId: string }) => {
+    const room = roomManager.getRoom(payload.roomCode);
+    if (room && room.gameState === GameState.MEETING) {
+        const voter = room.players.find(p => p.socketId === socket.id);
+        if (voter && voter.isAlive && !voter.hasVoted) {
+            voter.hasVoted = true;
+            voter.votedFor = payload.targetId;
+
+            const alivePlayers = room.players.filter(p => p.isAlive);
+            const totalVoted = alivePlayers.filter(p => p.hasVoted).length;
+
+            if (totalVoted === alivePlayers.length) { resolveVotes(room.roomCode); } 
+            else { io.to(room.roomCode).emit(SocketEvents.SERVER_TICK_UPDATE, { players: room.players, gameState: room.gameState, meetingTimer: room.meetingTimer }); }
+        }
+    }
+  });
+
   socket.on(SocketEvents.CLIENT_KILL, (payload: { roomCode: string, targetId: string }) => {
     const room = roomManager.getRoom(payload.roomCode);
     if (room && room.gameState === GameState.PLAYING) {
@@ -65,32 +184,19 @@ io.on('connection', (socket) => {
         const victim = room.players.find(p => p.id === payload.targetId);
 
         if (killer && victim && killer.role === PlayerRole.IMPOSTOR && killer.isAlive && victim.isAlive) {
-            // 1. فحص جدار الحماية والأمن التنازلي للـ Cooldown
             const now = Date.now();
             const lastKill = killer.lastKillTime || 0;
             const cooldownMs = room.settings.killCooldownSeconds * 1000;
 
-            if (now - lastKill < cooldownMs) {
-                socket.emit(SocketEvents.SERVER_ERROR, 'زر القتل في مرحلة الشحن، لا يمكن التصفية حالياً!');
-                return;
-            }
+            if (now - lastKill < cooldownMs) return;
 
-            // 2. التحقق الجغرافي الصارم من مسافة بكسلات اللاعبين لمنع برامج الغش (Distance Check)
             const distance = Math.sqrt(Math.pow(killer.position.x - victim.position.x, 2) + Math.pow(killer.position.y - victim.position.y, 2));
-            if (distance > 180) { // مسموح بهامش طفيف 180 بكسل لمراعاة تأخر البنغ والإنترنت بالشبكة
-                socket.emit(SocketEvents.SERVER_ERROR, 'الضحية بعيدة جداً عن نطاق سكينك المسموح!');
-                return;
-            }
+            if (distance > 180) return;
 
-            // 3. التنفيذ الفوري للقتل داخل السيرفر وتحديث الهويات
             victim.isAlive = false;
-            // تحويل دور الضحية إلى شبح طاقم طائر
             victim.role = PlayerRole.GHOST_CREWMATE;
-            
-            // إعادة تدوير عداد الـ Cooldown للقاتل من اللحظة الحالية
             killer.lastKillTime = now;
 
-            // بث التحديث الشامل فوراً ليعلم كل الهواتف بوقوع الجريمة ورسم الجثة
             io.to(room.roomCode).emit(SocketEvents.SERVER_TICK_UPDATE, { players: room.players, gameState: room.gameState });
         }
     }
@@ -100,7 +206,6 @@ io.on('connection', (socket) => {
     const room = roomManager.getRoom(payload.roomCode);
     if (room && room.gameState === GameState.PLAYING) {
         const player = room.players.find(p => p.socketId === socket.id);
-        // تمكين اللاعبين الأحياء والأشباح (الموتى) من الحركة بالسيرفر، مع سحب الصلاحيات فقط عند تجميد المباراة
         if (player) {
             const speed = GAME_CONSTANTS.BASE_SPEED * room.settings.playerSpeedMultiplier;
             player.position.x += payload.vec.x * speed;
@@ -120,8 +225,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    const { room } = roomManager.handleDisconnect(socket.id);
-    if (room) gameEngine.broadcastRoomUpdate(room.roomCode);
+    const { roomCode, room } = roomManager.handleDisconnect(socket.id);
+    if (roomCode && room) {
+        if (room.gameState === GameState.MEETING) {
+            const alivePlayers = room.players.filter(p => p.isAlive);
+            const totalVoted = alivePlayers.filter(p => p.hasVoted).length;
+            if (totalVoted === alivePlayers.length) resolveVotes(roomCode);
+        }
+        gameEngine.broadcastRoomUpdate(roomCode);
+    }
   });
 });
 
