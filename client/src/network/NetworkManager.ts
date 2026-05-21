@@ -37,5 +37,6 @@ export class NetworkManager {
   public joinByCode(playerName: string, roomCode: string): void { this.socket?.emit(SocketEvents.CLIENT_JOIN_CODE, { playerName, roomCode }); }
   public joinRandom(playerName: string): void { this.socket?.emit(SocketEvents.CLIENT_JOIN_RANDOM, { playerName }); }
 }
-// انسخ هذا السطر والصقه في آخر ملف NetworkManager.ts تماماً
+
+// التصدير الصافي والنهائي للمتغير المستخدم في الواجهة
 export const network = new NetworkManager();
