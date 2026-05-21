@@ -2,38 +2,44 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Among Us Web - Lobby</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Among Us Web</title>
     <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
     <div id="app">
-        <div class="menu-container">
+        <div id="menuContainer" class="menu-container">
             <h1 class="game-title">AMONG US</h1>
-            
             <div class="input-group">
                 <label for="playerName" class="label-title">اسم اللاعب:</label>
                 <input type="text" id="playerName" placeholder="أدخل اسمك هنا..." maxlength="14">
             </div>
-
             <div class="actions-group">
                 <button id="btnCreate" class="btn btn-host">إنشاء غرفة (Host)</button>
-                
                 <div class="join-box">
-                    <input type="text" id="roomCode" placeholder="كود الغرفة" maxlength="6">
+                    <input type="text" id="roomCode" placeholder="كود" maxlength="6">
                     <button id="btnJoinCode" class="btn btn-join">انضمام</button>
                 </div>
-
                 <button id="btnJoinRandom" class="btn btn-public">غرفة عشوائية</button>
             </div>
-
             <div id="errorMessage" class="error-msg hidden"></div>
+        </div>
 
-            <div id="lobbyScreen" class="lobby-screen hidden">
-                <h2>كود الغرفة: <span id="displayRoomCode">------</span></h2>
-                <div class="status-indicator">بانتظار اكتمال اللاعبين...</div>
-                <h3>اللاعبون المتواجدون:</h3>
-                <ul id="playersList"></ul>
+        <div id="lobbyScreen" class="lobby-screen menu-container hidden">
+            <h2>غرفة: <span id="displayRoomCode" style="color: #00ffff;">------</span></h2>
+            <div class="status-indicator">بانتظار المضيف لبدء المباراة...</div>
+            <h3>اللاعبون المتصلون:</h3>
+            <ul id="playersList"></ul>
+            <button id="btnStartGame" class="btn btn-host hidden" style="margin-top: 20px;">بدء المباراة 🚀</button>
+        </div>
+
+        <div id="gameScreen" class="game-screen hidden">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div id="joystickZone" class="joystick-zone">
+                <div class="joystick-base">
+                    <div id="joystickKnob" class="joystick-knob"></div>
+                </div>
             </div>
         </div>
     </div>
