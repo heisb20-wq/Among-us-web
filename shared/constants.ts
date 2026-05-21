@@ -13,7 +13,9 @@ export const GAME_CONSTANTS = {
   MAP_WIDTH: 2000,
   MAP_HEIGHT: 2000,
   BASE_SPEED: 4,
-  PLAYER_RADIUS: 20
+  PLAYER_RADIUS: 20,
+  // 🚀 الإضافة البرمجية الحرجة لحل مشكلة بناء السيرفر (معدل التحديث)
+  TICK_INTERVAL_MS: 33 
 };
 
 export const MAP_OBSTACLES: Obstacle[] = [
