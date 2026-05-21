@@ -2,7 +2,7 @@ import './style.css';
 import { network } from './network/NetworkManager';
 import { InputHandler } from './game/InputHandler';
 import { Room, GameState, Player, SocketEvents, PlayerRole } from '../../shared/types';
-import { GAME_CONSTANTS } from '../../shared/constants';
+import { GAME_CONSTANTS, MAP_OBSTACLES } from '../../shared/constants';
 
 let currentRoom: Room | null = null;
 let myPlayerId: string | null = null;
@@ -240,6 +240,22 @@ function renderLoop() {
     for (let x = 0; x < GAME_CONSTANTS.MAP_WIDTH; x += gridSize) { ctx.beginPath(); ctx.moveTo(x - cameraX, 0 - cameraY); ctx.lineTo(x - cameraX, GAME_CONSTANTS.MAP_HEIGHT - cameraY); ctx.stroke(); }
     for (let y = 0; y < GAME_CONSTANTS.MAP_HEIGHT; y += gridSize) { ctx.beginPath(); ctx.moveTo(0 - cameraX, y - cameraY); ctx.lineTo(GAME_CONSTANTS.MAP_WIDTH - cameraX, y - cameraY); ctx.stroke(); }
 
+    // رسم الغرف والجدران والعوائق الصلبة على الخريطة بشكل ديناميكي
+    MAP_OBSTACLES.forEach(obs => {
+        ctx.fillStyle = obs.color;
+        ctx.fillRect(obs.x - cameraX, obs.y - cameraY, obs.width, obs.height);
+        
+        ctx.strokeStyle = '#4a5568';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(obs.x - cameraX, obs.y - cameraY, obs.width, obs.height);
+
+        // طباعة أسماء الغرف داخل الهياكل
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.font = 'bold 12px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(obs.name, obs.x + obs.width / 2 - cameraX, obs.y + obs.height / 2 - cameraY);
+    });
+
     if (me && me.role === PlayerRole.IMPOSTOR && me.isAlive && currentRoom.gameState === GameState.PLAYING) {
         btnKill.classList.remove('hidden');
         const now = Date.now();
@@ -281,7 +297,7 @@ function renderLoop() {
         if (p.isAlive) {
             ctx.fillStyle = p.color;
             ctx.globalAlpha = (me && !me.isAlive) ? 0.4 : 1.0;
-            ctx.beginPath(); ctx.arc(screenX, screenY, 20, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(screenX, screenY, GAME_CONSTANTS.PLAYER_RADIUS, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
             ctx.globalAlpha = 1.0;
 
