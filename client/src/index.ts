@@ -93,7 +93,7 @@ btnSkipVote.addEventListener('click', () => {
     }
 });
 
-network.onJoinSuccessCallback = (roomCode, playerId) => {
+network.onJoinSuccessCallback = (roomCode: string, playerId: string) => {
     myPlayerId = playerId;
     menuContainer.classList.add('hidden');
     lobbyScreen.classList.remove('hidden');
@@ -131,7 +131,7 @@ network.onRoomUpdateCallback = (room: Room) => {
     }
 };
 
-network.onErrorCallback = (msg) => { errorMessage.innerText = msg; errorMessage.classList.remove('hidden'); };
+network.onErrorCallback = (msg: string) => { errorMessage.innerText = msg; errorMessage.classList.remove('hidden'); };
 
 function renderVotingGrid(room: Room) {
     playersVotingGrid.innerHTML = '';
@@ -240,7 +240,6 @@ function renderLoop() {
     for (let x = 0; x < GAME_CONSTANTS.MAP_WIDTH; x += gridSize) { ctx.beginPath(); ctx.moveTo(x - cameraX, 0 - cameraY); ctx.lineTo(x - cameraX, GAME_CONSTANTS.MAP_HEIGHT - cameraY); ctx.stroke(); }
     for (let y = 0; y < GAME_CONSTANTS.MAP_HEIGHT; y += gridSize) { ctx.beginPath(); ctx.moveTo(0 - cameraX, y - cameraY); ctx.lineTo(GAME_CONSTANTS.MAP_WIDTH - cameraX, y - cameraY); ctx.stroke(); }
 
-    // رسم الغرف والجدران والعوائق الصلبة على الخريطة بشكل ديناميكي
     MAP_OBSTACLES.forEach(obs => {
         ctx.fillStyle = obs.color;
         ctx.fillRect(obs.x - cameraX, obs.y - cameraY, obs.width, obs.height);
@@ -249,7 +248,6 @@ function renderLoop() {
         ctx.lineWidth = 2;
         ctx.strokeRect(obs.x - cameraX, obs.y - cameraY, obs.width, obs.height);
 
-        // طباعة أسماء الغرف داخل الهياكل
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.font = 'bold 12px Segoe UI';
         ctx.textAlign = 'center';
