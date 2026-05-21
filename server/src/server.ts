@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path'; // 🚀 إضافة مكتبة التعامل مع المسارات القياسية
 import { RoomManager } from './managers/RoomManager';
 import { GameEngine } from './engine/GameEngine';
 import { SocketEvents, GameState, PlayerRole } from '../../shared/types';
@@ -9,6 +10,10 @@ import { GAME_CONSTANTS, MAP_OBSTACLES } from '../../shared/constants';
 
 const app = express();
 app.use(cors());
+
+// 🚀 تحديد موقع مجلد بناء العميل (client/dist) بشكل ديناميكي آمن ومستقر
+const clientDistPath = path.join(process.cwd(), '../client/dist');
+app.use(express.static(clientDistPath));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' }, transports: ['websocket'] });
@@ -89,7 +94,6 @@ function resolveVotes(roomCode: string) {
 
     room.gameState = GameState.PLAYING;
     room.players.forEach(p => {
-        // نقطة رسبنة آمنة (1000, 700) داخل الكافتيريا وبعيدة تماماً عن الطاولة لئلا يعلق اللاعبون
         p.position = { x: 1000, y: 700 };
         p.hasVoted = false;
         p.votedFor = null;
@@ -125,7 +129,6 @@ io.on('connection', (socket) => {
         room.gameState = GameState.STARTING;
         roomManager.assignRolesAndPositions(room.roomCode);
         
-        // إجبار نقطة رسبنة آمنة للجميع عند أول رسبنة في المباراة لمنع التعليق
         room.players.forEach(p => { 
             p.position = { x: 1000, y: 700 };
             if(p.role === PlayerRole.IMPOSTOR) p.lastKillTime = Date.now(); 
@@ -236,7 +239,6 @@ io.on('connection', (socket) => {
             const nextX = player.position.x + payload.vec.x * speed;
             const nextY = player.position.y + payload.vec.y * speed;
 
-            // تطبيق منطق تفكيك محاور الحركة (الانزلاق الاحترافي) عند الاصطدام بالعوائق
             if (!checkCollision(nextX, player.position.y, GAME_CONSTANTS.PLAYER_RADIUS)) {
                 player.position.x = nextX;
             }
@@ -247,7 +249,6 @@ io.on('connection', (socket) => {
             if (payload.vec.x > 0) player.direction = 'right';
             if (payload.vec.x < 0) player.direction = 'left';
 
-            // الحفاظ على حدود الخريطة الكبرى الإجمالية
             if (player.position.x < 0) player.position.x = 0;
             if (player.position.x > GAME_CONSTANTS.MAP_WIDTH) player.position.x = GAME_CONSTANTS.MAP_WIDTH;
             if (player.position.y < 0) player.position.y = 0;
@@ -269,6 +270,11 @@ io.on('connection', (socket) => {
         gameEngine.broadcastRoomUpdate(roomCode);
     }
   });
+});
+
+// 🚀 توجيه أي مسار عشوائي أو طلب مباشر ليعرض ملف الـ index.html التابع للفرونت إند (React/Vite Router Fallback)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
 httpServer.listen(3000, () => console.log('Server Online on port 3000'));
