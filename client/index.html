@@ -40,6 +40,26 @@
             </div>
         </div>
 
+        <div id="meetingOverlay" class="meeting-overlay hidden">
+            <div class="meeting-box">
+                <h2 class="meeting-title">🚨 اجتماع طوارئ / بلاغ جثة 🚨</h2>
+                <div id="meetingTimer" class="meeting-timer">الوقت المتبقي للتصويت: -- ثانية</div>
+                
+                <div class="meeting-layout">
+                    <div class="players-voting-grid" id="playersVotingGrid"></div>
+                    
+                    <div class="meeting-chat-box">
+                        <div class="chat-logs" id="chatLogs"></div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chatInput" placeholder="اكتب تظلمك أو اتهامك هنا..." maxlength="60">
+                            <button id="btnSendChat" class="btn-send">إرسال</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="btnSkipVote" class="btn-skip">تخطي التصويت (Skip Vote)</button>
+            </div>
+        </div>
+
         <div id="gameScreen" class="game-screen hidden">
             <canvas id="gameCanvas"></canvas>
             
@@ -53,6 +73,9 @@
                 <button id="btnKill" class="btn-action btn-kill hidden" disabled>
                     <span class="action-text">KILL</span>
                     <span id="killCooldownTimer" class="cooldown-overlay"></span>
+                </button>
+                <button id="btnReport" class="btn-action btn-report hidden" disabled>
+                    <span class="action-text">REPORT</span>
                 </button>
             </div>
         </div>
