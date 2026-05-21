@@ -3,7 +3,6 @@ export enum GameState {
   STARTING = 'STARTING',
   PLAYING = 'PLAYING',
   MEETING = 'MEETING',
-  VOTING = 'VOTING',
   ENDED = 'ENDED'
 }
 
@@ -33,7 +32,9 @@ export interface Player {
   direction: 'left' | 'right';
   canVote: boolean;
   tasksProgress: number;
-  lastKillTime?: number; // تتبع وقت آخر عملية قتل لحساب الـ Cooldown
+  lastKillTime?: number;
+  hasVoted?: boolean;
+  votedFor?: string | null;
 }
 
 export interface RoomSettings {
@@ -50,15 +51,7 @@ export interface Room {
   settings: RoomSettings;
   gameState: GameState;
   createdAt: number;
-}
-
-export interface ClientJoinCodePayload {
-  playerName: string;
-  roomCode: string;
-}
-
-export interface ClientUpdateSettingsPayload {
-  settings: Partial<RoomSettings>;
+  meetingTimer?: number;
 }
 
 export const SocketEvents = {
@@ -68,10 +61,15 @@ export const SocketEvents = {
   CLIENT_UPDATE_SETTINGS: 'c_update_settings',
   CLIENT_START_GAME: 'c_start_game',
   CLIENT_MOVE: 'c_move',
-  CLIENT_KILL: 'c_kill', // حدث طلب القتل
+  CLIENT_KILL: 'c_kill',
+  CLIENT_REPORT_BODY: 'c_report_body',
+  CLIENT_SEND_CHAT: 'c_send_chat',
+  CLIENT_CAST_VOTE: 'c_cast_vote',
   CLIENT_LEAVE: 'c_leave',
   SERVER_ROOM_UPDATED: 's_room_updated',
   SERVER_ERROR: 's_error',
   SERVER_JOIN_SUCCESS: 's_join_success',
-  SERVER_TICK_UPDATE: 's_tick'
+  SERVER_TICK_UPDATE: 's_tick',
+  SERVER_CHAT_RECEIVE: 's_chat_recv',
+  SERVER_GAME_OVER: 's_game_over'
 };
