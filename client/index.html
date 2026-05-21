@@ -48,6 +48,13 @@
                     <div id="joystickKnob" class="joystick-knob"></div>
                 </div>
             </div>
+
+            <div id="actionZone" class="action-zone">
+                <button id="btnKill" class="btn-action btn-kill hidden" disabled>
+                    <span class="action-text">KILL</span>
+                    <span id="killCooldownTimer" class="cooldown-overlay"></span>
+                </button>
+            </div>
         </div>
     </div>
     <script type="module" src="./src/index.ts"></script>
