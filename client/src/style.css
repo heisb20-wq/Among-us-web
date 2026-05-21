@@ -1,175 +1,87 @@
 body {
-    background-color: #05070a;
-    color: #ffffff;
+    background-color: #05070a; color: #ffffff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-    user-select: none;
-    -webkit-user-select: none;
+    margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+    height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none;
 }
-
 .menu-container {
-    background: rgba(15, 22, 33, 0.98);
-    padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
-    border: 3px solid #2d3748;
-    width: 340px;
-    text-align: center;
-    z-index: 10;
+    background: rgba(15, 22, 33, 0.98); padding: 25px; border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.9); border: 3px solid #2d3748; width: 340px; text-align: center; z-index: 10;
 }
-
-.game-title {
-    color: #ff3333;
-    font-size: 2.5rem;
-    margin: 0 0 20px 0;
-    text-shadow: 3px 3px 0px #000;
-}
-
-.label-title {
-    display: block;
-    margin-bottom: 6px;
-    text-align: right;
-    color: #a0aec0;
-    font-weight: bold;
-}
-
+.game-title { color: #ff3333; font-size: 2.5rem; margin: 0 0 20px 0; text-shadow: 3px 3px 0px #000; }
+.label-title { display: block; margin-bottom: 6px; text-align: right; color: #a0aec0; font-weight: bold; }
 input {
-    width: 100%;
-    padding: 12px;
-    box-sizing: border-box;
-    background: #000;
-    border: 2px solid #4a5568;
-    color: #fff;
-    border-radius: 8px;
-    font-size: 1rem;
-    text-align: center;
+    width: 100%; padding: 12px; box-sizing: border-box; background: #000;
+    border: 2px solid #4a5568; color: #fff; border-radius: 8px; font-size: 1rem; text-align: center;
 }
-
 input:focus { border-color: #ff3333; outline: none; }
-
-.btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 10px;
-}
-
+.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
 .btn-host { background: #38a169; color: white; }
 .btn-join { background: #3182ce; color: white; }
 .btn-public { background: #dd6b20; color: white; margin-bottom: 0; }
-
 .join-box { display: flex; gap: 8px; margin-bottom: 10px; }
 .join-box input { width: 60%; }
 .join-box button { width: 40%; margin-bottom: 0; }
-
-.error-msg {
-    color: #ff3333;
-    background: rgba(255, 51, 51, 0.1);
-    padding: 8px;
-    border-radius: 6px;
-    margin-top: 12px;
-    border: 1px solid #ff3333;
-}
-
+.error-msg { color: #ff3333; background: rgba(255, 51, 51, 0.1); padding: 8px; border-radius: 6px; margin-top: 12px; border: 1px solid #ff3333; }
 .hidden { display: none !important; }
-
 #playersList { list-style: none; padding: 0; text-align: right; }
-#playersList li {
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.5);
-    margin-bottom: 6px;
-    border-radius: 6px;
-    border-right: 5px solid #fff;
-}
+#playersList li { padding: 8px; background: rgba(0, 0, 0, 0.5); margin-bottom: 6px; border-radius: 6px; border-right: 5px solid #fff; }
 
-/* شاشة عرض الدور السينمائية */
-.role-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    background-color: #000000;
-    animation: fadeInBackground 0.5s ease-out forwards;
-}
-
+.role-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; z-index: 100; background-color: #000000; animation: fadeInBackground 0.5s ease-out forwards; }
 .role-screen.impostor-theme { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.6); }
 .role-screen.crewmate-theme { box-shadow: inset 0 0 150px rgba(0, 191, 255, 0.4); }
 .role-content { text-align: center; }
-.role-title {
-    font-size: 4rem; font-weight: 900; letter-spacing: 4px; margin: 0;
-    text-shadow: 0 0 20px rgba(0,0,0,0.8);
-    animation: scalePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+.role-title { font-size: 4rem; font-weight: 900; letter-spacing: 4px; margin: 0; text-shadow: 0 0 20px rgba(0,0,0,0.8); animation: scalePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 .impostor-text { color: #ff3333; }
 .crewmate-text { color: #00bfff; }
 .role-subtitle { font-size: 1.4rem; color: #cbd5e0; margin-top: 15px; font-weight: 500; }
 
-/* واجهة منطقة اللعب والكانفاس */
 .game-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; }
 canvas { display: block; width: 100%; height: 100%; }
 
-/* تصميم عصا التحكم للهواتف (Joystick) - يسار */
-.joystick-zone {
-    position: absolute; bottom: 40px; left: 40px;
-    width: 120px; height: 120px; display: flex;
-    justify-content: center; align-items: center; z-index: 20;
-}
-.joystick-base {
-    width: 100px; height: 100px; background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50%;
-    display: flex; justify-content: center; align-items: center; touch-action: none;
-}
-.joystick-knob {
-    width: 45px; height: 45px; background: rgba(255, 255, 255, 0.7);
-    border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); touch-action: none;
-}
+.joystick-zone { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; z-index: 20; }
+.joystick-base { width: 100px; height: 100px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; touch-action: none; }
+.joystick-knob { width: 45px; height: 45px; background: rgba(255, 255, 255, 0.7); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); touch-action: none; }
 
-/* تصميم منطقة أزرار الأكشن (يمين الشاشة للهواتف) */
-.action-zone {
-    position: absolute; bottom: 45px; right: 45px;
-    display: flex; flex-direction: column; gap: 15px; z-index: 20;
-}
-
-.btn-action {
-    position: relative; width: 85px; height: 85px; border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.6); font-weight: 900; font-size: 1.1rem;
-    cursor: pointer; display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.6); overflow: hidden; outline: none;
-    transition: transform 0.1s ease, background 0.2s ease; touch-action: none;
-}
-
-/* زر القتل الدامي */
+.action-zone { position: absolute; bottom: 45px; right: 45px; display: flex; flex-direction: column; gap: 15px; z-index: 20; }
+.btn-action { position: relative; width: 85px; height: 85px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.6); font-weight: 900; font-size: 1.0rem; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 12px rgba(0,0,0,0.6); overflow: hidden; outline: none; touch-action: none; }
 .btn-kill { background: linear-gradient(135deg, #8a0000 0%, #ff1a1a 100%); color: #fff; text-shadow: 1px 1px 2px #000; }
-.btn-kill:not(:disabled):active { transform: scale(0.9); background: #5a0000; }
-
-/* غطاء الـ Cooldown الرمادي الدائري عند القفل */
-.btn-kill:disabled {
-    background: #2a1010; border-color: rgba(255,255,255,0.2);
-    color: rgba(255, 255, 255, 0.3); cursor: not-allowed;
-}
-
-.cooldown-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center;
-    align-items: center; font-size: 1.3rem; color: #ff8888; font-weight: bold;
-}
-
+.btn-kill:disabled { background: #2a1010; border-color: rgba(255,255,255,0.2); color: rgba(255, 255, 255, 0.3); }
+.cooldown-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; font-size: 1.3rem; color: #ff8888; font-weight: bold; }
+.btn-report { background: linear-gradient(135deg, #cc7a00 0%, #ffaa00 100%); color: white; text-shadow: 1px 1px 2px #000; }
+.btn-report:disabled { background: #2b1f0d; border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.2); cursor: not-allowed; }
 .action-text { pointer-events: none; }
+
+.meeting-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(5, 8, 15, 0.95); z-index: 200; display: flex; justify-content: center; align-items: center;
+}
+.meeting-box {
+    background: #111622; width: 90%; height: 90%; border-radius: 16px; border: 3px solid #4a5568;
+    display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
+}
+.meeting-title { text-align: center; color: #ffcc00; margin: 0 0 5px 0; font-size: 1.8rem; text-shadow: 2px 2px 0 #000; }
+.meeting-timer { text-align: center; color: #cbd5e0; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; }
+.meeting-layout { flex: 1; display: flex; gap: 20px; overflow: hidden; margin-bottom: 15px; }
+
+.players-voting-grid { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; overflow-y: auto; padding-right: 5px; }
+.vote-card {
+    background: #1a2234; border: 2px solid #2d3748; border-radius: 10px; padding: 14px;
+    display: flex; justify-content: space-between; align-items: center; color: #fff; cursor: pointer;
+    font-weight: bold; font-size: 1.1rem; transition: transform 0.1s;
+}
+.vote-card.voted { border-color: #38a169; background: #13201a; }
+.vote-card.dead { opacity: 0.4; cursor: not-allowed; border-color: #e53e3e; background: #221212; }
+
+.meeting-chat-box { width: 340px; background: #080c14; border-radius: 10px; border: 2px solid #2d3748; display: flex; flex-direction: column; overflow: hidden; }
+.chat-logs { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; text-align: right; }
+.chat-msg { font-size: 1rem; line-height: 1.4; word-break: break-word; background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 6px; }
+.chat-input-area { display: flex; border-top: 2px solid #2d3748; }
+.chat-input-area input { flex: 1; border: none; border-radius: 0; background: #000; text-align: right; padding: 14px; color: #fff; font-size: 1rem; }
+.btn-send { background: #3182ce; color: #fff; border: none; padding: 0 20px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+
+.btn-skip { background: #4a5568; color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; align-self: center; width: 240px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+.btn-skip:active { transform: scale(0.98); }
 
 @keyframes fadeInBackground { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scalePop { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
