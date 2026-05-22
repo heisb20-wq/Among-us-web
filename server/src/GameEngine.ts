@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
-import { RoomManager } from '../managers/RoomManager';
-import { GAME_CONSTANTS } from '../../../shared/constants';
-import { SocketEvents } from '../../../shared/types';
+import { RoomManager } from './RoomManager';
+import { GAME_CONSTANTS } from './shared/constants';
+import { SocketEvents } from './shared/types';
 
 export class GameEngine {
   private io: Server;
