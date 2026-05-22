@@ -3,10 +3,10 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
-import { RoomManager } from './managers/RoomManager';
-import { GameEngine } from './engine/GameEngine';
-import { SocketEvents, GameState, PlayerRole } from '../../shared/types';
-import { GAME_CONSTANTS, MAP_OBSTACLES } from '../../shared/constants';
+import { RoomManager } from './RoomManager';
+import { GameEngine } from './GameEngine';
+import { SocketEvents, GameState, PlayerRole } from './shared/types';
+import { GAME_CONSTANTS, MAP_OBSTACLES } from './shared/constants';
 
 const app = express();
 app.use(cors());
