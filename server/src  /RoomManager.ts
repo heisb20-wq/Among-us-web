@@ -1,5 +1,5 @@
-import { Room, Player, GameState, PlayerRole } from '../../../shared/types';
-import { GAME_CONSTANTS } from '../../../shared/constants';
+import { Room, Player, GameState, PlayerRole } from './shared/types';
+import { GAME_CONSTANTS } from './shared/constants';
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
