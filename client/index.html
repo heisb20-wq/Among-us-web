@@ -3,132 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Among Us 2D Multiplayer</title>
-</head>
+    <title>Among Us Web Game</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    
+    </head>
 <body>
 
-    <div id="menuContainer" class="menu-container">
-        <div class="game-card">
-            <h1 class="game-title">AMONG US</h1>
-            
-            <div class="input-group">
-                <label for="playerName">اسم اللاعب</label>
-                <input type="text" id="playerName" placeholder="أدخل اسمك هنا..." autocomplete="off">
-            </div>
+    <main id="gameWrapper">
+        <section id="menuContainer" class="screen">
+            <input type="text" id="playerName" placeholder="أدخل اسمك هنا...">
+            <input type="text" id="roomCode" placeholder="كود الغرفة (4 خانات)">
+            <button id="btnCreate">إنشاء غرفة</button>
+            <button id="btnJoinCode">انضمام بالكود</button>
+            <button id="btnJoinRandom">دخول عشوائي</button>
+            <div id="errorMessage" class="hidden"></div>
+        </section>
 
-            <button id="btnCreate" class="btn btn-create">
-                <span class="icon">👑</span> إنشاء غرفة (Host)
-            </button>
-
-            <div class="join-grid">
-                <input type="text" id="roomCode" placeholder="كود الغرفة" maxlength="4">
-                <button id="btnJoinCode" class="btn btn-join">انضمام</button>
-            </div>
-
-            <div class="divider"><span>أو</span></div>
-
-            <button id="btnJoinRandom" class="btn btn-random">
-                <span class="icon">🚀</span> دخول سريع لغرفة عشوائية
-            </button>
-            
-            <div id="errorMessage" class="error-message hidden"></div>
-        </div>
-    </div>
-
-    <div id="lobbyScreen" class="lobby-screen hidden">
-        <div class="game-card lobby-card">
-            <h2>غرفة الانتظار</h2>
-            <div class="room-code-box">
-                كود الغرفة: <span id="displayRoomCode">----</span>
-            </div>
-
-            <div id="hostSettingsPanel" class="settings-panel">
-                <h3>⚙️ إعدادات المباراة</h3>
-                <div class="setting-row">
-                    <label>عدد الخونة (Impostors):</label>
-                    <select id="settingImpostors" class="game-select">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                    </select>
+        <section id="lobbyScreen" class="screen hidden">
+            <h2 id="displayRoomCode"></h2>
+            <ul id="playersList"></ul>
+            <div id="hostSettingsPanel">
                 </div>
-                <div class="setting-row">
-                    <label>سرعة الحركة:</label>
-                    <select id="settingSpeed" class="game-select">
-                        <option value="4">عادية (1x)</option>
-                        <option value="6" selected>سريعة (1.5x)</option>
-                        <option value="8">قصوى (2x)</option>
-                    </select>
-                </div>
-                <div class="setting-row">
-                    <label>شحن زر القتل (CD):</label>
-                    <select id="settingKillCd" class="game-select">
-                        <option value="15">15 ثانية</option>
-                        <option value="25" selected>25 ثانية</option>
-                        <option value="35">35 ثانية</option>
-                    </select>
-                </div>
-            </div>
+            <button id="btnStartGame" class="hidden">بدء اللعبة</button>
+        </section>
 
-            <h3>اللاعبين المتصلين (<span id="playerCountLabel">0</span>):</h3>
-            <ul id="playersList" class="players-list">
-                </ul>
-            <button id="btnStartGame" class="btn btn-create hidden">🚀 ابدأ المباراة الآن</button>
-        </div>
-    </div>
-
-    <div id="roleScreen" class="role-screen hidden">
-        <div class="role-content">
-            <h1 id="roleTitle" class="role-title">CREWMATE</h1>
-            <p id="roleSubtitle" class="role-subtitle">تحميل تفاصيل المهمة...</p>
-        </div>
-    </div>
-
-    <div id="gameScreen" class="game-screen hidden">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div class="game-controls">
-            <button id="btnKill" class="btn-game btn-kill hidden">
-                ☠️ KILL <span id="killCooldownTimer"></span>
-            </button>
-            <button id="btnReport" class="btn-game btn-report hidden">
-                📢 REPORT
-            </button>
-        </div>
-    </div>
-
-    <div id="meetingOverlay" class="meeting-overlay hidden">
-        <div class="meeting-box">
-            <h2 class="meeting-title">🚨 اجتماع طارئ! 🚨</h2>
-            <div id="meetingTimer" class="meeting-timer">الوقت المتبقي للتصويت: -- ثانية</div>
-            
-            <div class="meeting-layout">
-                <div id="playersVotingGrid" class="voting-grid">
-                    </div>
-                
-                <div class="meeting-chat">
-                    <div id="chatLogs" class="chat-logs"></div>
-                    <div class="chat-input-group">
-                        <input type="text" id="chatInput" placeholder="اكتب رسالتك هنا..." autocomplete="off">
-                        <button id="btnSendChat">إرسال</button>
-                    </div>
-                </div>
-            </div>
-            
-            <button id="btnSkipVote" class="btn-skip">تخطي التصويت (Skip)</button>
-        </div>
-    </div>
-
-    <div id="killAnimationOverlay" class="kill-animation-overlay hidden">
-        <div class="kill-anim-box">
-            <h1 class="shh-text">SHHH!</h1>
-            <div class="anim-visual">
-                <div id="animKillerCard" class="actor-card"></div>
-                <div class="vs-slash">⚔️</div>
-                <div id="animVictimCard" class="actor-card"></div>
-            </div>
-            <p id="killAnimDescription" class="anim-desc">تمت تصفيتك بواسطة الخائن!</p>
-        </div>
-    </div>
+        <section id="gameScreen" class="screen hidden">
+            <canvas id="gameCanvas"></canvas>
+            <button id="btnKill" class="action-btn">تصفية</button>
+            <button id="btnReport" class="action-btn">تبليغ</button>
+            <span id="killCooldownTimer"></span>
+        </section>
+    </main>
 
     <script type="module" src="./src/index.ts"></script>
 </body>
