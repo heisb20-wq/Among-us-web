@@ -1,7 +1,7 @@
 import './style.css';
 import { io, Socket } from 'socket.io-client';
-import { SocketEvents, Room, Player, GameState, PlayerRole } from '../../../shared/types';
-import { GAME_CONSTANTS, MAP_OBSTACLES } from '../../../shared/constants';
+import { SocketEvents, Room, Player, GameState, PlayerRole } from './shared/types';
+import { GAME_CONSTANTS, MAP_OBSTACLES } from './shared/constants';
 
 // ==========================================================================
 // 1. الاتصال بالسيرفر
