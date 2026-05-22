@@ -540,3 +540,66 @@ input[type="text"]:focus, .game-select:focus {
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+/* ==========================================================================
+   8. الجويستيك اللمسي (مفقود تماماً - إضافة مطلوبة)
+   ========================================================================== */
+.joystick-base {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    z-index: 10;
+    touch-action: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.joystick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.5), rgba(255,255,255,0.15));
+    border: 2px solid rgba(255,255,255,0.4);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* مؤشر كولداون القتل */
+.kill-cd-label {
+    background: rgba(0,0,0,0.7);
+    color: #fbbf24;
+    font-weight: 900;
+    font-size: 1rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    min-width: 70px;
+    text-align: center;
+    border: 1px solid rgba(251,191,36,0.3);
+    align-self: center;
+}
+
+/* إخفاء الجويستيك على أجهزة الديسكتوب (عند عدم اللمس) */
+@media (hover: hover) and (pointer: fine) {
+    .joystick-base { display: none; }
+}
+
+/* تحسينات Responsive للـ Meeting على الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .meeting-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .voting-grid { max-height: 200px; }
+    .meeting-chat { height: 220px; }
+    .game-controls { bottom: 180px; }
+}
