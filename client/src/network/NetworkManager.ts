@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { SocketEvents, Room } from '../../../shared/types';
+import { SocketEvents, Room } from '../shared/types';
 
 export class NetworkManager {
   // تم تحويلها إلى public لأن ملف index.ts يستدعيها مباشرة
